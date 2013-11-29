@@ -16,6 +16,7 @@ Currently the only methods being wrapped in any useful way are:
 
 * Object->Fetch
 * Object->Store
+* Query->Search
 
 ### Author
 
