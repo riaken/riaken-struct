@@ -6,6 +6,7 @@ import (
 )
 
 type Animal struct {
+	Id   string
 	Name string `json:"name" riak:"index"`
 }
 
@@ -43,15 +44,18 @@ func TestSecondaryIndexes(t *testing.T) {
 	// Query
 	var check []Animal
 	query := session.Query()
-	if _, err := query.Out(&check).SecondaryIndexes([]byte("animals"), []byte("name_bin"), []byte("chicken"), nil, nil, 0, nil); err != nil {
+	if _, err := query.K("Id").Out(&check).SecondaryIndexes([]byte("animals"), []byte("name_bin"), []byte("chicken"), nil, nil, 0, nil); err != nil {
 		t.Error(err.Error())
 	}
 
 	if len(check) == 0 {
 		t.Error("expected results")
 	} else {
-		if string(check[0].Name) != "chicken" {
-			t.Error("expected: chicken, got: %s", string(check[0].Name))
+		if check[0].Name != "chicken" {
+			t.Errorf("expected: chicken, got: %s", check[0].Name)
+		}
+		if check[0].Id != "2i-a1" {
+			t.Errorf("expected: 2i-a1, got: %s", check[0].Id)
 		}
 	}
 
@@ -97,12 +101,16 @@ func TestSearch(t *testing.T) {
 
 	var animals []Animal
 	query := session.Query()
-	if _, err := query.Out(&animals).Search([]byte("animals"), []byte("name:pig OR name:dog")); err != nil {
+	if _, err := query.K("Id").Out(&animals).Search([]byte("animals"), []byte("name:pig OR name:dog")); err != nil {
 		t.Error(err.Error())
 	}
 
 	if len(animals) != 2 {
 		t.Error("expected 2 documents")
+	}
+
+	if animals[0].Id != "a1" && animals[0].Id != "a2" {
+		t.Error("unexpected key")
 	}
 
 	if _, err := o1.Delete(); err != nil {

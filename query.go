@@ -14,10 +14,12 @@ type Query struct {
 	session   *Session
 	coreQuery *core.Query
 	out       interface{}
+	key       string
 }
 
 func (q *Query) reset() {
 	q.out = nil
+	q.key = ""
 }
 
 func (q *Query) Do(opts interface{}) *Query {
@@ -30,13 +32,28 @@ func (q *Query) Out(out interface{}) *Query {
 	return q
 }
 
+// K sets the special case struct member to write the key value out to in searches.
+func (q *Query) K(key string) *Query {
+	q.key = key
+	return q
+}
+
 func (q *Query) MapReduce(req, ct []byte) (*rpb.RpbMapRedResp, error) {
 	return q.coreQuery.MapReduce(req, ct)
 }
 
 // SecondaryIndexes is based loosely on the logic in http://godoc.org/labix.org/v2/mgo#Query.All
 //
-// This must be called in combination with Out().
+// Chain call this method with K() to describe the struct member to write the key value out to,
+// and Out() to pass the []struct to output the queried values to.
+//
+//  type Results struct {
+//    Id string
+//    Value string
+//  }
+//
+//  var foo []results
+//  query.K("Id").Out(&results).SecondaryIndexes(...)
 func (q *Query) SecondaryIndexes(bucket, index, key, start, end []byte, maxResults uint32, continuation []byte) (*rpb.RpbIndexResp, error) {
 	defer q.reset()
 	if q.out == nil {
@@ -64,6 +81,16 @@ func (q *Query) SecondaryIndexes(bucket, index, key, start, end []byte, maxResul
 		if _, err := object.Fetch(e.Interface()); err != nil {
 			return nil, err
 		}
+		if q.key != "" {
+			ek := reflect.ValueOf(e.Interface()).Elem()
+			fk := ek.FieldByName(q.key)
+			if fk.Kind() == reflect.String {
+				fk.SetString(string(k))
+			}
+			if fk.Kind() == reflect.Slice {
+				fk.SetBytes(k)
+			}
+		}
 		sv = reflect.Append(sv, e.Elem())
 		sv = sv.Slice(0, sv.Cap())
 		i++
@@ -73,7 +100,9 @@ func (q *Query) SecondaryIndexes(bucket, index, key, start, end []byte, maxResul
 }
 
 // Search is based loosely on the logic in http://godoc.org/labix.org/v2/mgo#Query.All
-// This must be called in combination with Out().
+//
+// Chain call this method with K() to describe the struct member to write the key value out to,
+// and Out() to pass the []struct to output the queried values to.
 //
 // WARNING: Searches that result in a lot of results can potentially run the application out of memory.
 func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
@@ -105,6 +134,16 @@ func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
 				object := bucket.Object(string(v.GetValue()))
 				if _, err := object.Fetch(e.Interface()); err != nil {
 					return nil, err
+				}
+				if q.key != "" {
+					ek := reflect.ValueOf(e.Interface()).Elem()
+					fk := ek.FieldByName(q.key)
+					if fk.Kind() == reflect.String {
+						fk.SetString(string(v.GetValue()))
+					}
+					if fk.Kind() == reflect.Slice {
+						fk.SetBytes(v.GetValue())
+					}
 				}
 				sv = reflect.Append(sv, e.Elem())
 				sv = sv.Slice(0, sv.Cap())
