@@ -6,7 +6,7 @@ import (
 )
 
 type Animal struct {
-	Name string `json:"name"`
+	Name string `json:"name" riak:"index"`
 }
 
 func TestQuery(t *testing.T) {
@@ -19,6 +19,46 @@ func TestQuery(t *testing.T) {
 	defer session.Close()
 
 	session.Query()
+}
+
+func TestSecondaryIndexes(t *testing.T) {
+	client := dial()
+	defer client.Close()
+	session, err := client.Session()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer session.Close()
+
+	// Setup
+	animal := Animal{
+		Name: "chicken",
+	}
+	bucket := session.GetBucket("animals")
+	object := bucket.Object("2i-a1")
+	if _, err := object.Store(&animal); err != nil {
+		t.Error(err.Error())
+	}
+
+	// Query
+	var check []Animal
+	query := session.Query()
+	if _, err := query.Out(&check).SecondaryIndexes([]byte("animals"), []byte("name_bin"), []byte("chicken"), nil, nil, 0, nil); err != nil {
+		t.Error(err.Error())
+	}
+
+	if len(check) == 0 {
+		t.Error("expected results")
+	} else {
+		if string(check[0].Name) != "chicken" {
+			t.Error("expected: chicken, got: %s", string(check[0].Name))
+		}
+	}
+
+	// Cleanup
+	if _, err := object.Delete(); err != nil {
+		t.Error(err.Error())
+	}
 }
 
 func TestSearch(t *testing.T) {
@@ -57,7 +97,7 @@ func TestSearch(t *testing.T) {
 
 	var animals []Animal
 	query := session.Query()
-	if _, err := query.Search([]byte("animals"), []byte("name:pig OR name:dog"), &animals); err != nil {
+	if _, err := query.Out(&animals).Search([]byte("animals"), []byte("name:pig OR name:dog")); err != nil {
 		t.Error(err.Error())
 	}
 

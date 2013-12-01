@@ -41,7 +41,10 @@ func (o *Object) Store(in interface{}) (*rpb.RpbPutResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return o.coreObject.Store(content.GetValue())
+	opts := &rpb.RpbPutReq{
+		Content: content,
+	}
+	return o.coreObject.Do(opts).Store(content.GetValue())
 }
 
 func (o *Object) Delete() (bool, error) {
