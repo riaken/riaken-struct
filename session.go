@@ -16,6 +16,10 @@ func (s *Session) CoreSession() *core.Session {
 	return s.coreSession
 }
 
+func (s *Session) Release() {
+	s.coreSession.Release()
+}
+
 func (s *Session) GetBucket(name string) *Bucket {
 	b := new(Bucket)
 	b.session = s
@@ -30,15 +34,11 @@ func (s *Session) Query() *Query {
 	return q
 }
 
-func (s *Session) Close() {
-	s.coreSession.Client.Release(s.coreSession.Node)
-}
-
 func (s *Session) ListBuckets() ([]*core.Bucket, error) {
 	return s.coreSession.ListBuckets()
 }
 
-func (s *Session) Ping() (bool, error) {
+func (s *Session) Ping() bool {
 	return s.coreSession.Ping()
 }
 

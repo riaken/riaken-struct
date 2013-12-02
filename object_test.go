@@ -15,11 +15,8 @@ type User struct {
 func TestObject(t *testing.T) {
 	client := dial()
 	defer client.Close()
-	session, err := client.Session()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer session.Close()
+	session := client.Session()
+	defer session.Release()
 
 	user := &User{
 		Name: "User",
@@ -46,11 +43,8 @@ func TestObject(t *testing.T) {
 func TestObjectDo(t *testing.T) {
 	client := dial()
 	defer client.Close()
-	session, err := client.Session()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer session.Close()
+	session := client.Session()
+	defer session.Release()
 
 	user := &User{
 		Name: "User",

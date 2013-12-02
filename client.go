@@ -1,10 +1,6 @@
 package riaken_struct
 
 import (
-	"time"
-)
-
-import (
 	core "github.com/riaken/riaken-core"
 )
 
@@ -13,9 +9,9 @@ type Client struct {
 	marshaller *StructMarshal
 }
 
-func NewClient(addrs []string, max int, timeout time.Duration, sm *StructMarshal) *Client {
+func NewClient(addrs []string, max int, sm *StructMarshal) *Client {
 	c := new(Client)
-	c.coreClient = core.NewClient(addrs, max, timeout)
+	c.coreClient = core.NewClient(addrs, max)
 	c.marshaller = sm
 	return c
 }
@@ -24,15 +20,15 @@ func (c *Client) Dial() {
 	c.coreClient.Dial()
 }
 
-func (c *Client) Session() (*Session, error) {
+func (c *Client) Debug(debug bool) {
+	c.coreClient.Debug(debug)
+}
+
+func (c *Client) Session() *Session {
 	s := new(Session)
-	cs, err := c.coreClient.Session()
-	if err != nil {
-		return nil, err
-	}
-	s.coreSession = cs
+	s.coreSession = c.coreClient.Session()
 	s.marshaller = c.marshaller
-	return s, nil
+	return s
 }
 
 func (c *Client) Close() {

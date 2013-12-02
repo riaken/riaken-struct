@@ -13,11 +13,8 @@ type Animal struct {
 func TestQuery(t *testing.T) {
 	client := dial()
 	defer client.Close()
-	session, err := client.Session()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer session.Close()
+	session := client.Session()
+	defer session.Release()
 
 	session.Query()
 }
@@ -25,11 +22,8 @@ func TestQuery(t *testing.T) {
 func TestSecondaryIndexes(t *testing.T) {
 	client := dial()
 	defer client.Close()
-	session, err := client.Session()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer session.Close()
+	session := client.Session()
+	defer session.Release()
 
 	// Setup
 	animal := Animal{
@@ -68,16 +62,12 @@ func TestSecondaryIndexes(t *testing.T) {
 func TestSearch(t *testing.T) {
 	client := dial()
 	defer client.Close()
-	session, err := client.Session()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer session.Close()
+	session := client.Session()
+	defer session.Release()
 
 	// Set bucket properties.
 	// Unfortunately these still aren't exposed via PBC, so do it manually with curl.
-	_, err = exec.Command("curl", "-XPUT", "-H", "content-type:application/json", "http://127.0.0.1:8093/riak/animals", "-d", `{"props":{"precommit":[{"mod":"riak_search_kv_hook","fun":"precommit"}]}}`).Output()
-	if err != nil {
+	if _, err := exec.Command("curl", "-XPUT", "-H", "content-type:application/json", "http://127.0.0.1:8093/riak/animals", "-d", `{"props":{"precommit":[{"mod":"riak_search_kv_hook","fun":"precommit"}]}}`).Output(); err != nil {
 		t.Error(err.Error())
 	}
 
