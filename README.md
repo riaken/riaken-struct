@@ -12,11 +12,14 @@ It provides the ability to pass structs in and out of Riak as other formats such
 
 http://godoc.org/github.com/riaken/riaken-struct
 
-Currently the only methods being wrapped in any useful way are:
+The following methods being wrapped for struct usage are:
 
 * Object->Fetch
 * Object->Store
+* Query->SecondaryIndexes
 * Query->Search
+
+The rest of the underlying riaken-core API is exposed as normal.
 
 ### Author
 
