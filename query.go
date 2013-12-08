@@ -32,8 +32,8 @@ func (q *Query) Out(out interface{}) *Query {
 	return q
 }
 
-// K sets the special case struct member to write the key value out to in searches.
-func (q *Query) K(key string) *Query {
+// Key sets the special case struct member to write the key value out to in searches.
+func (q *Query) Key(key string) *Query {
 	q.key = key
 	return q
 }

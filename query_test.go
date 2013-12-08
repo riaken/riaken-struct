@@ -38,7 +38,7 @@ func TestSecondaryIndexes(t *testing.T) {
 	// Query
 	var check []Animal
 	query := session.Query()
-	if _, err := query.K("Id").Out(&check).SecondaryIndexes([]byte("animals"), []byte("name_bin"), []byte("chicken"), nil, nil, 0, nil); err != nil {
+	if _, err := query.Key("Id").Out(&check).SecondaryIndexes([]byte("animals"), []byte("name_bin"), []byte("chicken"), nil, nil, 0, nil); err != nil {
 		t.Error(err.Error())
 	}
 
@@ -91,7 +91,7 @@ func TestSearch(t *testing.T) {
 
 	var animals []Animal
 	query := session.Query()
-	if _, err := query.K("Id").Out(&animals).Search([]byte("animals"), []byte("name:pig OR name:dog")); err != nil {
+	if _, err := query.Key("Id").Out(&animals).Search([]byte("animals"), []byte("name:pig OR name:dog")); err != nil {
 		t.Error(err.Error())
 	}
 
