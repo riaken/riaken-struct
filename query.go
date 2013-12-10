@@ -129,15 +129,13 @@ func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
 	}
 
 	// Since a key can be returned multiple times, check if it's already been stored.
-	var found []string
+	found := map[string]bool{}
 	check := func(key string) bool {
-		for _, v := range found {
-			if v == key {
-				return true
-			}
+		_, ok := found[key]
+		if !ok {
+			found[key] = true
 		}
-		found = append(found, key)
-		return false
+		return ok
 	}
 
 	i := 0
