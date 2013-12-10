@@ -16,6 +16,11 @@ func NewClient(addrs []string, max int, sm *StructMarshal) *Client {
 	return c
 }
 
+// CoreClient fetches the underlying riaken-core Client.
+func (c *Client) CoreClient() *core.Client {
+	return c.coreClient
+}
+
 func (c *Client) Dial() {
 	c.coreClient.Dial()
 }
@@ -33,9 +38,4 @@ func (c *Client) Session() *Session {
 
 func (c *Client) Close() {
 	c.coreClient.Close()
-}
-
-// CoreClient fetches the underlying riaken-core Client.
-func (c *Client) CoreClient() *core.Client {
-	return c.coreClient
 }

@@ -16,6 +16,11 @@ type Object struct {
 	coreObject *core.Object
 }
 
+// CoreObject returns the underlying riaken-core Object.
+func (o *Object) CoreObject() *core.Object {
+	return o.coreObject
+}
+
 func (o *Object) Do(opts interface{}) *Object {
 	o.coreObject.Do(opts)
 	return o
@@ -49,9 +54,4 @@ func (o *Object) Store(in interface{}) (*rpb.RpbPutResp, error) {
 
 func (o *Object) Delete() (bool, error) {
 	return o.coreObject.Delete()
-}
-
-// CoreObject returns the underlying riaken-core Object.
-func (o *Object) CoreObject() *core.Object {
-	return o.coreObject
 }

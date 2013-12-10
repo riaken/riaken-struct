@@ -15,6 +15,13 @@ func (b *Bucket) CoreBucket() *core.Bucket {
 	return b.coreBucket
 }
 
+func (b *Bucket) Object(key string) *Object {
+	o := new(Object)
+	o.bucket = b
+	o.coreObject = b.coreBucket.Object(key)
+	return o
+}
+
 func (b *Bucket) ListKeys() (*rpb.RpbListKeysResp, error) {
 	return b.coreBucket.ListKeys()
 }
@@ -25,11 +32,4 @@ func (b *Bucket) GetBucketProps() (*rpb.RpbGetBucketResp, error) {
 
 func (b *Bucket) SetBucketProps(props *rpb.RpbBucketProps) (bool, error) {
 	return b.coreBucket.SetBucketProps(props)
-}
-
-func (b *Bucket) Object(key string) *Object {
-	o := new(Object)
-	o.bucket = b
-	o.coreObject = b.coreBucket.Object(key)
-	return o
 }

@@ -22,6 +22,11 @@ func (q *Query) reset() {
 	q.key = ""
 }
 
+// CoreQuery returns the underlying riaken-core Query.
+func (q *Query) CoreQuery() *core.Query {
+	return q.coreQuery
+}
+
 func (q *Query) Do(opts interface{}) *Query {
 	q.coreQuery.Do(opts)
 	return q
