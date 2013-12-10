@@ -49,7 +49,7 @@ func (q *Query) MapReduce(req, ct []byte) (*rpb.RpbMapRedResp, error) {
 
 // SecondaryIndexes is based loosely on the logic in http://godoc.org/labix.org/v2/mgo#Query.All
 //
-// Chain call this method with K() to describe the struct member to write the key value out to,
+// Chain call this method with Key() to describe the struct member to write the key value out to,
 // and Out() to pass the []struct to output the queried values to.
 //
 //  type Results struct {
@@ -58,7 +58,7 @@ func (q *Query) MapReduce(req, ct []byte) (*rpb.RpbMapRedResp, error) {
 //  }
 //
 //  var foo []results
-//  query.K("Id").Out(&results).SecondaryIndexes(...)
+//  query.Key("Id").Out(&results).SecondaryIndexes(...)
 func (q *Query) SecondaryIndexes(bucket, index, key, start, end []byte, maxResults uint32, continuation []byte) (*rpb.RpbIndexResp, error) {
 	defer q.reset()
 	if q.out == nil {
@@ -106,10 +106,11 @@ func (q *Query) SecondaryIndexes(bucket, index, key, start, end []byte, maxResul
 
 // Search is based loosely on the logic in http://godoc.org/labix.org/v2/mgo#Query.All
 //
-// Chain call this method with K() to describe the struct member to write the key value out to,
+// Chain call this method with Key() to describe the struct member to write the key value out to,
 // and Out() to pass the []struct to output the queried values to.
 //
 // WARNING: Searches that result in a lot of results can potentially run the application out of memory.
+// If this occurs fall back to fetching the keys with the riaken-core search and manually fetching the data.
 func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
 	defer q.reset()
 	if q.out == nil {
@@ -126,6 +127,19 @@ func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
 	if data.GetNumFound() == 0 {
 		return data, nil
 	}
+
+	// Since a key can be returned multiple times, check if it's already been stored.
+	var found []string
+	check := func(key string) bool {
+		for _, v := range found {
+			if v == key {
+				return true
+			}
+		}
+		found = append(found, key)
+		return false
+	}
+
 	i := 0
 	sv := rv.Elem()
 	sv = sv.Slice(0, sv.Cap())
@@ -135,6 +149,10 @@ func (q *Query) Search(index, query []byte) (*rpb.RpbSearchQueryResp, error) {
 		for _, v := range d.GetFields() {
 			// Riak seems to default the key to "id"
 			if string(v.GetKey()) == "id" {
+				// Check if key has been stored.
+				if check(string(v.GetValue())) {
+					continue
+				}
 				e := reflect.New(et)
 				object := bucket.Object(string(v.GetValue()))
 				if _, err := object.Fetch(e.Interface()); err != nil {
