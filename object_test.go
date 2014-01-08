@@ -55,8 +55,12 @@ func TestObjectDo(t *testing.T) {
 	}
 	bucket := session.GetBucket("b1")
 	object := bucket.Object("o1")
-	if _, err := object.Do(opts).Store(user); err != nil {
+	if check, err := object.Do(opts).Store(user); err != nil {
 		t.Error(err.Error())
+	} else {
+		if len(check.GetContent()) == 0 {
+			t.Error("expected content to be returned")
+		}
 	}
 
 	if _, err := object.Delete(); err != nil {
