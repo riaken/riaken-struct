@@ -92,98 +92,9 @@ func (c *StructMarshal) Marshal(data interface{}) (*rpb.RpbContent, error) {
 	e := t.Elem()
 	switch e.Kind() {
 	case reflect.Struct:
-		matched := false
-
-		for i := 0; i < e.NumField(); i++ {
-			val := e.Field(i).Interface()
-			fld := e.Type().Field(i)
-			knd := e.Field(i).Kind()
-			tag := fld.Tag
-
-			// Skip anonymous fields
-			if fld.Anonymous {
-				continue
-			}
-
-			// Match marshaller tag
-			if matched == false && tag.Get(c.tag) != "" {
-				matched = true
-			}
-
-			if tdata := tag.Get("riak"); tdata != "" {
-				for _, tfield := range strings.Split(tdata, ",") {
-					switch tfield {
-					case "index":
-						index := &rpb.RpbPair{}
-						var key string
-						switch knd {
-						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-							key = fld.Name + "_int"
-							switch knd {
-							case reflect.Int:
-								index.Value = []byte(strconv.Itoa(int(val.(int))))
-								break
-							case reflect.Int8:
-								index.Value = []byte(strconv.Itoa(int(val.(int8))))
-								break
-							case reflect.Int16:
-								index.Value = []byte(strconv.Itoa(int(val.(int16))))
-								break
-							case reflect.Int32:
-								index.Value = []byte(strconv.Itoa(int(val.(int32))))
-								break
-							case reflect.Int64:
-								index.Value = []byte(strconv.Itoa(int(val.(int64))))
-								break
-							}
-							index.Key = []byte(strings.ToLower(key))
-							break
-						case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-							key = fld.Name + "_int"
-							switch knd {
-							case reflect.Uint:
-								index.Value = []byte(strconv.Itoa(int(val.(uint))))
-								break
-							case reflect.Uint8:
-								index.Value = []byte(strconv.Itoa(int(val.(uint8))))
-								break
-							case reflect.Uint16:
-								index.Value = []byte(strconv.Itoa(int(val.(uint16))))
-								break
-							case reflect.Uint32:
-								index.Value = []byte(strconv.Itoa(int(val.(uint32))))
-								break
-							case reflect.Uint64:
-								index.Value = []byte(strconv.Itoa(int(val.(uint64))))
-								break
-							}
-							index.Key = []byte(strings.ToLower(key))
-							break
-						case reflect.String:
-							key = fld.Name + "_bin"
-							index.Key = []byte(strings.ToLower(key))
-							index.Value = []byte(val.(string))
-							break
-						case reflect.Slice:
-							if fld.Type == typeOfBytes {
-								key = fld.Name + "_bin"
-								index.Key = []byte(strings.ToLower(key))
-								index.Value = []byte(val.([]byte))
-							}
-							break
-						}
-						out.Indexes = append(out.Indexes, index)
-						break
-					}
-				}
-			}
-		}
-
-		// Automatically marshal structures
-		if matched {
-			if err := c.marshaller(&data, out); err != nil {
-				return nil, err
-			}
+		c.process(e, out)
+		if err := c.marshaller(&data, out); err != nil {
+			return nil, err
 		}
 		break
 	default:
@@ -196,4 +107,95 @@ func (c *StructMarshal) Marshal(data interface{}) (*rpb.RpbContent, error) {
 // Unmarshal unwraps the database data into the passed structure based on the defined marshaller.
 func (c *StructMarshal) Unmarshal(in []byte, data interface{}) error {
 	return c.unmarshaller(in, data)
+}
+
+func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
+	for i := 0; i < e.NumField(); i++ {
+		val := e.Field(i).Interface()
+		fld := e.Type().Field(i)
+		knd := e.Field(i).Kind()
+		tag := fld.Tag
+
+		// Skip anonymous fields
+		if fld.Anonymous {
+			continue
+		}
+
+		// Continue to process nested structs
+		if knd == reflect.Struct {
+			c.process(e.Field(i), out)
+		}
+
+		if tag.Get(c.tag) == "" {
+			continue
+		}
+
+		if tdata := tag.Get("riak"); tdata != "" {
+			for _, tfield := range strings.Split(tdata, ",") {
+				switch tfield {
+				case "index":
+					index := &rpb.RpbPair{}
+					var key string
+					switch knd {
+					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+						key = fld.Name + "_int"
+						switch knd {
+						case reflect.Int:
+							index.Value = []byte(strconv.Itoa(int(val.(int))))
+							break
+						case reflect.Int8:
+							index.Value = []byte(strconv.Itoa(int(val.(int8))))
+							break
+						case reflect.Int16:
+							index.Value = []byte(strconv.Itoa(int(val.(int16))))
+							break
+						case reflect.Int32:
+							index.Value = []byte(strconv.Itoa(int(val.(int32))))
+							break
+						case reflect.Int64:
+							index.Value = []byte(strconv.Itoa(int(val.(int64))))
+							break
+						}
+						index.Key = []byte(strings.ToLower(key))
+						break
+					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+						key = fld.Name + "_int"
+						switch knd {
+						case reflect.Uint:
+							index.Value = []byte(strconv.Itoa(int(val.(uint))))
+							break
+						case reflect.Uint8:
+							index.Value = []byte(strconv.Itoa(int(val.(uint8))))
+							break
+						case reflect.Uint16:
+							index.Value = []byte(strconv.Itoa(int(val.(uint16))))
+							break
+						case reflect.Uint32:
+							index.Value = []byte(strconv.Itoa(int(val.(uint32))))
+							break
+						case reflect.Uint64:
+							index.Value = []byte(strconv.Itoa(int(val.(uint64))))
+							break
+						}
+						index.Key = []byte(strings.ToLower(key))
+						break
+					case reflect.String:
+						key = fld.Name + "_bin"
+						index.Key = []byte(strings.ToLower(key))
+						index.Value = []byte(val.(string))
+						break
+					case reflect.Slice:
+						if fld.Type == typeOfBytes {
+							key = fld.Name + "_bin"
+							index.Key = []byte(strings.ToLower(key))
+							index.Value = []byte(val.([]byte))
+						}
+						break
+					}
+					out.Indexes = append(out.Indexes, index)
+					break
+				}
+			}
+		}
+	}
 }
