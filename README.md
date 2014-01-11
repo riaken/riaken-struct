@@ -29,6 +29,7 @@ Not much different from riaken-core, with the exception of passing a marshaller.
 
 	package main
 
+	import "log"
 	import "github.com/riaken/riaken-struct"
 
 	func main() {
@@ -37,7 +38,7 @@ Not much different from riaken-core, with the exception of passing a marshaller.
 		// Riak cluster addresses
 		addrs := []string{"127.0.0.1:8083", "127.0.0.1:8084", "127.0.0.1:8085", "127.0.0.1:8086", "127.0.0.1:8087"}
 		// Create a client, passing the addresses, and number of connections to maintain per cluster node
-		client := NewClient(addrs, 1, marshaller)
+		client := riaken_struct.NewClient(addrs, 1, marshaller)
 		// Dial the servers
 		if err := client.Dial(); err != nil {
 			log.Fatal(err.Error()) // all nodes are down
