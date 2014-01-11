@@ -111,6 +111,10 @@ func (c *StructMarshal) Unmarshal(in []byte, data interface{}) error {
 
 func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
 	for i := 0; i < e.NumField(); i++ {
+		if !e.Field(i).CanSet() {
+			continue
+		}
+
 		val := e.Field(i).Interface()
 		fld := e.Type().Field(i)
 		knd := e.Field(i).Kind()

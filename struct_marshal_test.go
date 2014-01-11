@@ -22,6 +22,7 @@ type EncodeData struct {
 	Byte         byte       `json:"abyte" riak:"index"`
 	Rune         rune       `json:"arune" riak:"index"`
 	NestedStruct NestedData `json:"nested_struct"`
+	unexported   string
 }
 
 type NestedData struct {
@@ -50,6 +51,7 @@ func TestCoder(t *testing.T) {
 		NestedStruct: NestedData{
 			Nested: "nested-data",
 		},
+		unexported: "unexported",
 	}
 
 	encdata, err := e.Marshal(data)
