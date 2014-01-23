@@ -92,7 +92,7 @@ func (c *StructMarshal) Marshal(data interface{}) (*rpb.RpbContent, error) {
 	e := t.Elem()
 	switch e.Kind() {
 	case reflect.Struct:
-		c.process(e, out)
+		c.process("", e, out)
 		if err := c.marshaller(&data, out); err != nil {
 			return nil, err
 		}
@@ -109,7 +109,7 @@ func (c *StructMarshal) Unmarshal(in []byte, data interface{}) error {
 	return c.unmarshaller(in, data)
 }
 
-func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
+func (c *StructMarshal) process(carry string, e reflect.Value, out *rpb.RpbContent) {
 	for i := 0; i < e.NumField(); i++ {
 		if !e.Field(i).CanSet() {
 			continue
@@ -127,7 +127,7 @@ func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
 
 		// Continue to process nested structs
 		if knd == reflect.Struct {
-			c.process(e.Field(i), out)
+			c.process(fld.Name+"_", e.Field(i), out)
 		}
 
 		if tag.Get(c.tag) == "" {
@@ -142,7 +142,7 @@ func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
 					var key string
 					switch knd {
 					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-						key = fld.Name + "_int"
+						key = carry + fld.Name + "_int"
 						switch knd {
 						case reflect.Int:
 							index.Value = []byte(strconv.Itoa(int(val.(int))))
@@ -163,7 +163,7 @@ func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
 						index.Key = []byte(strings.ToLower(key))
 						break
 					case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-						key = fld.Name + "_int"
+						key = carry + fld.Name + "_int"
 						switch knd {
 						case reflect.Uint:
 							index.Value = []byte(strconv.Itoa(int(val.(uint))))
@@ -184,13 +184,13 @@ func (c *StructMarshal) process(e reflect.Value, out *rpb.RpbContent) {
 						index.Key = []byte(strings.ToLower(key))
 						break
 					case reflect.String:
-						key = fld.Name + "_bin"
+						key = carry + fld.Name + "_bin"
 						index.Key = []byte(strings.ToLower(key))
 						index.Value = []byte(val.(string))
 						break
 					case reflect.Slice:
 						if fld.Type == typeOfBytes {
-							key = fld.Name + "_bin"
+							key = carry + fld.Name + "_bin"
 							index.Key = []byte(strings.ToLower(key))
 							index.Value = []byte(val.([]byte))
 						}

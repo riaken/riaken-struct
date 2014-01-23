@@ -66,13 +66,13 @@ func TestCoder(t *testing.T) {
 
 	var found bool
 	for _, v := range encdata.GetIndexes() {
-		if string(v.GetKey()) == "nested_bin" {
+		if string(v.GetKey()) == "nestedstruct_nested_bin" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected a nested_bin index")
+		t.Error("Expected a nestedstruct_nested_bin index")
 	}
 
 	jsondata, err := json.Marshal(data)
