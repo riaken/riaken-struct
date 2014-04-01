@@ -11,7 +11,10 @@ type Animal struct {
 }
 
 func TestQuery(t *testing.T) {
-	client := dial()
+	client, err := dial()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	defer client.Close()
 	session := client.Session()
 	defer session.Release()
@@ -20,7 +23,10 @@ func TestQuery(t *testing.T) {
 }
 
 func TestSecondaryIndexes(t *testing.T) {
-	client := dial()
+	client, err := dial()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	defer client.Close()
 	session := client.Session()
 	defer session.Release()
@@ -60,7 +66,10 @@ func TestSecondaryIndexes(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	client := dial()
+	client, err := dial()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	defer client.Close()
 	session := client.Session()
 	defer session.Release()

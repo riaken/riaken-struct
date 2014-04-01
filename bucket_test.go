@@ -5,7 +5,10 @@ import (
 )
 
 func TestBucket(t *testing.T) {
-	client := dial()
+	client, err := dial()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 	defer client.Close()
 	session := client.Session()
 	defer session.Release()

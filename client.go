@@ -21,8 +21,8 @@ func (c *Client) CoreClient() *core.Client {
 	return c.coreClient
 }
 
-func (c *Client) Dial() {
-	c.coreClient.Dial()
+func (c *Client) Dial() error {
+	return c.coreClient.Dial()
 }
 
 func (c *Client) Debug(debug bool) {
