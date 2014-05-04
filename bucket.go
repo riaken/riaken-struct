@@ -22,6 +22,10 @@ func (b *Bucket) Object(key string) *Object {
 	return o
 }
 
+func (b *Bucket) Counter(key string) *core.Counter {
+	return b.coreBucket.Counter(key)
+}
+
 func (b *Bucket) ListKeys() (*rpb.RpbListKeysResp, error) {
 	return b.coreBucket.ListKeys()
 }

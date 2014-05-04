@@ -13,5 +13,7 @@ func TestBucket(t *testing.T) {
 	session := client.Session()
 	defer session.Release()
 
-	session.GetBucket("b1")
+	b := session.GetBucket("b1")
+	b.Object("o1")
+	b.Counter("c1")
 }
