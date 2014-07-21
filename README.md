@@ -6,11 +6,11 @@ It provides the ability to pass structs in and out of Riak as other formats such
 
 ## Install
 
-    go get github.com/riaken/riaken-struct
+    go get gopkg.in/riaken/riaken-struct.v1
 
 ## Documentation
 
-http://godoc.org/github.com/riaken/riaken-struct
+http://godoc.org/gopkg.in/riaken/riaken-struct.v1
 
 The following methods being wrapped for struct usage are:
 
