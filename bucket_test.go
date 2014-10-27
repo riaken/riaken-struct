@@ -16,4 +16,5 @@ func TestBucket(t *testing.T) {
 	b := session.GetBucket("b1")
 	b.Object("o1")
 	b.Counter("c1")
+	b.Crdt("dt1")
 }
